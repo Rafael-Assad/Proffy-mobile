@@ -17,6 +17,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: 'Archivo_700Bold',
     color: '#FFF',
+  },
+  header:{
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
   }
 })
 
