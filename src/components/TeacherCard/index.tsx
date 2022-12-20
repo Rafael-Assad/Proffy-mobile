@@ -1,54 +1,113 @@
-import { View, Text, Image } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useState } from 'react'
+import { View, Text, Image, Linking } from 'react-native'
 import { RectButton } from 'react-native-gesture-handler'
 
 import heartOutlineIcon from '../../assets/images/icons/heart-outline.png'
 import unfavoriteIcon from '../../assets/images/icons/unfavorite.png'
 import whatsappIcon from '../../assets/images/icons/whatsapp.png'
+import api from '../../services/api'
 
 import styles from './style'
 
-const TeacherCard = () => {
+export interface ClassDetails {
+  id: number;
+  name: string;
+  subject: string;
+  avatar: string;
+  bio:string;
+  cost: string;
+  whatsapp: string;
+}
+
+interface TeacherCarsProps extends ClassDetails {
+  favorite: boolean
+}
+
+const TeacherCard = ({id, name, subject, avatar, bio, cost, whatsapp, favorite}: TeacherCarsProps) => {
+  const [isFavorited, setIsFavorited] = useState<boolean>(favorite)
+
+  const newConnection = async () => await api.post('connections', {user_id: id})
+
+  const linkToWhats = () =>{
+    // Fazer mudanças pra poder adicionar um texto personalizado 
+    // além de ter o código de área como obrigatório
+    // https://faq.whatsapp.com/425247423114725/
+    //  pesquisar melhor whatsapp deep link
+    newConnection()
+    Linking.openURL(`whatsapp://send?&phone=+5511${whatsapp}`)
+  }
+
+  const toogleFavorites = async () => {
+    const teacher = {id, name, subject, avatar, bio, cost, whatsapp}
+
+    const favorites = await AsyncStorage.getItem('favorites')
+
+      let favsArray = []
+
+      if(favorites) favsArray = JSON.parse(favorites)
+
+    if(isFavorited){
+      const favIndex = favsArray.findIndex((teacheItem: ClassDetails) =>{
+        return teacheItem.id === teacher.id
+      })
+
+      favsArray.splice(favIndex, 1)
+
+      setIsFavorited(false)
+    } else{
+      favsArray.push(teacher)
+
+      setIsFavorited(true)
+    }
+
+    await AsyncStorage.setItem('favorites', JSON.stringify(favsArray))
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.profile}>
         <Image style={styles.avatar}
-          source={{uri: 'https://picsum.photos/200'}}
+          source={{uri: avatar}}
         />
 
         <View style={styles.profileInfo}>
           <Text style={styles.name}>
-            Beijamin Arola
+            {name}
           </Text>
 
           <Text style={styles.subject}>
-            Teoria do Caos
+            {subject}
           </Text>
         </View>
 
       </View>
       <Text style={styles.bio}>
-        Preciso de algum texto que possa se encaixar bem aqui, não sei o que fazer
-        a não ser escrever qualquer coisa, como eu estou pensando agora, mas não acho que vou ter um texto tão adequado no final.
-        {'\n'}
-
-        No final das constas, isso não interssa, pois o que eu realmente preciso é colocar algo pra ver como fica, o que vai ser final sera dinâmico no fim das contas 
+        {bio}
       </Text>
 
       <View style={styles.footer}>
         <Text style={styles.price}>
           Preço/hora {'   '}
           <Text style={styles.priceValue}>
-            R$ 50,00
+            R$ {parseInt(cost).toFixed(2)}
           </Text>
         </Text>
 
         <View style={styles.buttonsContaiers}>
-          <RectButton style={styles.favoriteButton}>
-            {/* <Image source={heartOutlineIcon}/> */}
-            <Image source={unfavoriteIcon}/>
+          <RectButton onPress={toogleFavorites}
+            style={[styles.favoriteButton,
+                    isFavorited? styles.favorited :{}]}
+          >
+            {isFavorited 
+            ? <Image source={unfavoriteIcon}/> 
+            : <Image source={heartOutlineIcon}/>}
+            
           </RectButton>
 
-          <RectButton style={styles.contactButton}>
+          <RectButton style={styles.contactButton}
+            onPress={linkToWhats}
+          >
             <Image source={whatsappIcon}/>
 
             <Text style={styles.contactButtonText}>

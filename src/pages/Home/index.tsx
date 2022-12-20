@@ -1,16 +1,31 @@
+import { useEffect, useState } from 'react'
 import { View, Text, Image, TouchableOpacity } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
+import { RectButton } from 'react-native-gesture-handler'
 
-import styles from './style'
+import { RootNavigationProp } from '../../@types/navigation'
 import HomeImg from '../../assets/images/landing.png'
 import StudyImg from '../../assets/images/icons/study.png'
 import GiveClassesImg from '../../assets/images/icons/give-classes.png'
 import HeartImg from '../../assets/images/icons/heart.png'
-import { useNavigation } from '@react-navigation/native'
-import { RootNavigationProp } from '../../@types/navigation'
-import { RectButton } from 'react-native-gesture-handler'
+
+import styles from './style'
+import api from '../../services/api'
 
 const Home = () => {
   const { navigate } = useNavigation<RootNavigationProp>()
+
+  const [totalConnections, setTotalConnections] = useState(0)
+
+  useEffect(() => {
+    api.get('connections')
+      .then( response =>{
+        const { total } = response.data
+
+        setTotalConnections(total)
+      })
+  }, [])
+  
 
   const NavigateToGiveClasses = () => navigate('GiveClasses')
 
@@ -50,7 +65,7 @@ const Home = () => {
       </View>
 
       <Text style={styles.totalConnections}>
-        Total de 5 conexões já realizadas {'  '}
+        Total de {totalConnections} conexões já realizadas {'  '}
 
       <Image source={HeartImg}/>
       </Text>
